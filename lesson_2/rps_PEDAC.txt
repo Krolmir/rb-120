@@ -1,0 +1,73 @@
+Problem: Adjust computer choice based on history of computer moves.
+
+Problem 1: track computer win lose % with moves
+xamples : rock 75% Lose
+         paper 40% Lose
+         scissors 100% Lose
+         spock 0% Lose
+         Lizard 25% Lose
+
+Input: A move. Rock paper etc, 
+Output: based on outcome(win or lose) we will adjust the lose% 
+Steps: 
+- define a method in the move class track computer win lose %
+- define a class variable @win_history {'rock' => [], etc}
+- everytime the computer wins. we <<  1 to the hash value array == to the proper
+ move i.e rock, paper, scissors
+- everytime the computer losses we << 0 to the hash == to the proper move
+- to get the percent lets define a method in the move class that takes the
+ @@win_history hash and adds up all the values in the array and divides by
+ array.length (change to float for propper number)
+- out put the % 
+
+
+Problem 2: Figure out the logic to how much % should each weight be = too 
+           I have 5 moves, 4 have lets say a 50% lose rate, while rock has 0%
+           lose rate. How to make rock chance higher for the next turn
+           I want to allocate a random of 100 values, highest win rate to lower
+           as follows
+       30 of value or 30%
+       26 of value or 25%
+       20 of value or 20%
+       14 of value or 15% 
+       10 of value or 10%
+       if 2 or more values are the same then add the values together and split
+       them so if rock and paper both have 0% lose rate we can take
+       30 + 26 / 2
+
+Problem 3: Implement the %base chance of the computer choosing a move
+
+Using my hash and the lose % we need to create a new value array that will * the
+values with the appropriate number
+
+Input: Hash of my 5 moves, with their percentages 
+Output: Value array that has 100 values properly weighted 
+Steps:
+- Modify the hashtolosepercentage to not output but to save to a hash
+  - Sort the hash based on value
+- initialize a new value array called comp_values = [] in the move class#
+
+New Logic for problem 2
+
+We are going to add values to an array based on the range of their lose %
+For instance if we have the following Hash:
+- 'Rock' => 45, 'Paper' => 55, 'Scissors' => 100, 'Lizard' => 15, 'Spock' => 0
+- From the above hash well have the following cases
+- Case Hash
+- when 0-30 then new_arr << value * 30
+- when 31-60 then new_arr << value * 20
+- when 61-100 then new_arr << value * 10
+new_arr
+
+Data Structures:
+Input: Hash
+Output: Array
+
+Steps: 
+- Change the hash_to_lose_percentage to the lose percentage hash
+- lose to hash percentage needs to be called after everymove to properly update
+  the hash. 
+- initializer an array that will be a class variable
+- create a populate array method that will use the hash lose_percentage and itterate
+  over it while using the case statement from above to know how to craft the
+  new array
