@@ -1,18 +1,147 @@
-SLEEP = 0.5
+module HelperMethods
+  SLEEP = 0.5
 
-def prompt(msg)
-  puts "=> #{msg}"
+  def prompt(msg)
+    puts "=> #{msg}"
+  end
+
+  def clear
+    system('clear') || system('cls')
+  end
+
+  def rest
+    sleep(SLEEP)
+  end
+
+  def new_line
+    puts " "
+  end
+
+  def small_spacer
+    puts '---------------------------'
+  end
+
+  def big_spacer
+    puts "'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''"
+  end
 end
 
-def clear
-  puts `clear`
-end
+module Displayable
+  include HelperMethods
+  AMOUNT_OF_WINS_NEEDED = 5
 
-def rest
-  sleep(SLEEP)
+  def display_welcome_message
+    prompt("Welcome to Rock, Paper, Scissor, Lizard and Spock! This is a " \
+           "first to #{AMOUNT_OF_WINS_NEEDED} wins! Goodluck!")
+  end
+
+  def display_goodbye_message
+    prompt("Thanks for playing Rock, Paper, Scissors, Lizard and Spock. Good "\
+           "bye!")
+  end
+
+  def display_moves
+    small_spacer
+    rest
+    prompt("#{human.name} chose #{human.move}.")
+    rest
+    prompt("#{computer.name} chose #{computer.move}.")
+    small_spacer
+  end
+
+  def display_winner(hum, comp)
+    if hum > comp
+      rest
+      prompt("#{hum} #{hum.action(comp)} "\
+             "#{comp}")
+      prompt("Point for #{human.name}!")
+    elsif comp > hum
+      rest
+      prompt("#{comp} #{comp.action(hum)} "\
+             "#{hum}")
+      prompt("Point for #{computer.name}!")
+    else
+      rest
+      prompt("It's a tie!")
+    end
+  end
+
+  def display_grand_winner
+    if score.human_total == AMOUNT_OF_WINS_NEEDED
+      big_spacer
+      prompt("Congratulations #{human.name}. You have won in the race to "\
+             "#{AMOUNT_OF_WINS_NEEDED} wins!")
+      new_line
+      big_spacer
+    elsif score.computer_total == AMOUNT_OF_WINS_NEEDED
+      prompt("Sorry #{human.name}, but you have lost. #{computer.name} has won"\
+             " in the race to #{AMOUNT_OF_WINS_NEEDED} wins. Better luck next "\
+             "time.")
+    end
+  end
+
+  def display_player
+    clear
+    prompt("#{human.name} VS #{computer.name}")
+  end
+
+  def display_name_rules
+    prompt("Please enter your name:")
+    prompt("Must contain 1-10 characters")
+    prompt("Numbers and letters only")
+  end
+
+  def display_score(player1, computer)
+    rest
+    small_spacer
+    puts "Score: #{player1}: #{human_total}"
+    puts "       #{computer}: #{computer_total}"
+    small_spacer
+    new_line
+  end
+
+  def display_name_error
+    prompt("Sorry, you must enter a valid name. Try Again.")
+  end
+
+  def display_choose_move
+    prompt("Please choose 'r' of 'rock' for rock , 'p' or 'paper' for paper, "\
+           "'sc' or 'scissors' for scissors, 'l' or 'lizard for lizard OR 'sp'"\
+           " or 'spock' for spock:")
+  end
+
+  def display_choose_error
+    prompt("Sorry, invalid choice.")
+  end
+
+  def display_new_opponent_option
+    prompt("Would you like a new opponent? (y/n)")
+  end
+
+  def display_yes_no_error
+    prompt("Sorry, must be y or n.")
+  end
+
+  def display_play_again_prompt
+    prompt("Would you like to play again? (y/n)")
+  end
+
+  def display_tracker
+    new_line
+    puts "#{human.name} move tracker!"
+    small_spacer
+    Move.move_tracker(Move.human_history)
+    small_spacer
+    new_line
+    puts "Computer move tracker!"
+    small_spacer
+    Move.move_tracker(Move.computer_history)
+    small_spacer
+  end
 end
 
 class Score
+  include Displayable
   attr_reader :human_total, :computer_total
 
   def initialize
@@ -27,19 +156,12 @@ class Score
   def computer_win
     @computer_total += 1
   end
-
-  def display_score(player1, computer)
-    rest
-    puts '-----------------------'
-    puts "Score: #{player1}: #{human_total}"
-    puts "       #{computer}: #{computer_total}"
-    puts '-----------------------'
-    puts " "
-  end
 end
 
 class Move
-  VALUES = ['r', 'p', 'sc', 'l', 'sp']
+  include Displayable
+  VALUES = ['r', 'p', 'sc', 'l', 'sp', 'rock', 'paper', 'scissors', 'lizard',
+            'spock']
   attr_reader :value
 
   @@human_history = { 'Rock' => 0,
@@ -71,11 +193,9 @@ class Move
   end
 
   def self.move_tracker(history_hash)
-    puts "-----------------"
     history_hash.each do |key, value|
       puts "#{key}: #{value}"
     end
-    puts "-----------------"
   end
 end
 
@@ -158,6 +278,7 @@ class Spock < Move
 end
 
 class Player
+  include Displayable
   attr_accessor :move, :name
 
   def initialize
@@ -181,26 +302,23 @@ class Human < Player
 
     loop do
       rest
-      prompt("Please enter your name:")
-      prompt("Must contain 1-10 characters")
-      prompt("Numbers and letters only")
+      display_name_rules
       n = gets.chomp
       clear
       break unless n.empty? || n.size > 10 || n =~ /[^A-Za-z0-9]+/
-      prompt("Sorry, you must enter a valid name. Try Again.")
+      display_name_error
     end
     self.name = n
   end
 
-  def choose
+  def choose_move
     choice = nil
     loop do
       rest
-      prompt("Please choose 'r' for rock , 'p' for paper, 'sc' for scissors, "\
-           "'l' for lizard or 'sp' for spock:")
+      display_choose_move
       choice = gets.chomp.downcase
       break if Move::VALUES.include? choice
-      prompt("Sorry, invalid choice.")
+      display_choose_error
     end
     self.move = create_move(choice)
   end
@@ -263,7 +381,7 @@ class Computer < Player
     @@win_history
   end
 
-  def choose
+  def choose_move
     self.move = if name == 'Captain Kirk'
                   create_move(['spock', 'paper'].sample)
                 elsif name == 'The Thing'
@@ -281,49 +399,14 @@ class Computer < Player
 end
 
 class RPSGame
-  AMOUNT_OF_WINS_NEEDED = 5
+  include Displayable
+
   attr_accessor :human, :computer, :score
 
   def initialize
     @human = Human.new
     @computer = Computer.new
     @score = Score.new
-  end
-
-  def display_welcome_message
-    prompt("Welcome to Rock, Paper, Scissor, Lizard and Spock! This is a " \
-    "first to #{AMOUNT_OF_WINS_NEEDED} wins! Goodluck!")
-  end
-
-  def display_goodbye_message
-    prompt("Thanks for playing Rock, Paper, Scissors, Lizard and Spock. Good "\
-           "bye!")
-  end
-
-  def display_moves
-    puts '-----------------------'
-    rest
-    prompt("#{human.name} chose #{human.move}.")
-    rest
-    prompt("#{computer.name} chose #{computer.move}.")
-    puts '-----------------------'
-  end
-
-  def display_winner(hum, comp)
-    if hum > comp
-      rest
-      prompt("#{hum} #{hum.action(comp)} "\
-             "#{comp}")
-      prompt("Point for #{human.name}!")
-    elsif comp > hum
-      rest
-      prompt("#{comp} #{comp.action(hum)} "\
-             "#{hum}")
-      prompt("Point for #{computer.name}!")
-    else
-      rest
-      prompt("It's a tie!")
-    end
   end
 
   def update_score(human, computer)
@@ -336,50 +419,30 @@ class RPSGame
     end
   end
 
-  def display_grand_winner
-    if score.human_total == AMOUNT_OF_WINS_NEEDED
-      puts "'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''"
-      prompt("Congratulations #{human.name}. You have won in the race to "\
-           "#{AMOUNT_OF_WINS_NEEDED} wins!")
-      puts "'''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''"
-    elsif score.computer_total == AMOUNT_OF_WINS_NEEDED
-      prompt("Sorry #{human.name}, but you have lost. #{computer.name} has won"\
-           " in the race to #{AMOUNT_OF_WINS_NEEDED} wins. Better luck next "\
-           "time.")
-    end
-  end
-
   def new_computer?
     answer = nil
 
     loop do
-      prompt("Would you like a new opponent? (y/n)")
+      display_new_opponent_option
       answer = gets.chomp.downcase
-      break if ['y', 'n'].include? answer
-      prompt("Sorry, must be y or n.")
+      break if ['y', 'n', 'yes', 'no'].include? answer
+      display_yes_no_error
     end
 
-    return false if answer == 'n'
-    return true if answer == 'y'
+    answer == 'y' || answer == 'yes'
   end
 
   def play_again?
     answer = nil
 
     loop do
-      prompt("Would you like to play again? (y/n)")
+      display_play_again_prompt
       answer = gets.chomp.downcase
-      break if ['y', 'n'].include? answer
-      prompt("Sorry, must be y or n.")
+      break if ['y', 'n', 'yes', 'no'].include? answer
+      display_yes_no_error
     end
 
-    return false if answer == 'n'
-    return true if answer == 'y'
-  end
-
-  def display_player
-    clear
-    prompt("#{human.name} VS #{computer.name}")
+    answer == 'y' || answer == 'yes'
   end
 
   def reset_game
@@ -393,22 +456,14 @@ class RPSGame
     clear
   end
 
-  def display_tracker
-    puts " "
-    puts "#{human.name} move tracker!"
-    puts Move.move_tracker(Move.human_history)
-    puts "Computer move tracker!"
-    puts Move.move_tracker(Move.computer_history)
-  end
-
   def grand_winner?
     score.human_total == AMOUNT_OF_WINS_NEEDED ||
       score.computer_total == AMOUNT_OF_WINS_NEEDED
   end
 
-  def choosing
-    human.choose
-    computer.choose
+  def choosing_moves
+    human.choose_move
+    computer.choose_move
   end
 
   def update_cycle
@@ -421,7 +476,7 @@ class RPSGame
     display_welcome_message
 
     loop do
-      choosing
+      choosing_moves
       display_player
       display_moves
       display_winner(human.move, computer.move)
