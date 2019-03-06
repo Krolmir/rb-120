@@ -67,7 +67,19 @@ Steps:
 - Change the hash_to_lose_percentage to the lose percentage hash
 - lose to hash percentage needs to be called after everymove to properly update
   the hash. 
-- initializer an array that will be a class variable
+- initializer an array that will be a class variable - @@value_array
 - create a populate array method that will use the hash lose_percentage and itterate
   over it while using the case statement from above to know how to craft the
   new array
+  
+Problem: Create personalities for the computer players.
+Examples: Add 2 more computer names and set personalities for Thing, Kirk. Kirk
+          will have spock and paper as options and Thing will only choose rock 
+
+Data Structures: Create 2 classes for the users
+
+Create a Display Module
+
+module Displayable
+
+- Extract all display methods into here
