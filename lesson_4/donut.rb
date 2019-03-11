@@ -7,7 +7,7 @@ class KrispyKreme
   end
   
   def to_s
-    filling_type = "Plain" if filling_type == nil
+    self.filling_type = "Plain" if filling_type == nil
     
     if glazing == nil
       "#{filling_type}"

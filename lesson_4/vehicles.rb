@@ -49,6 +49,10 @@ class WaterVehicles
     self.fuel_efficiency = fuel_efficiency
     self.fuel_capacity = fuel_capacity
   end
+  
+  def range
+    super + 10
+  end
 end
 
 class Catamaran
