@@ -6,7 +6,11 @@ module Helper
   end
 
   def filler
-    puts "----------------"
+    puts "-------------------"
+  end
+
+  def big_filler
+    puts "--------------------------------"
   end
 
   def clear
@@ -20,11 +24,12 @@ module Helper
   def joinor(arr, del1 = ', ', del2 = 'or')
     return arr[0].to_s if arr.size == 1
     return arr[0].to_s + ' ' + del2 + ' ' + arr[1].to_s if arr.size == 2
-    arr.join(del1).reverse.sub(del1.strip, del2.reverse + ' ' + del1.strip).reverse
+    arr[-1] = "#{del2} #{arr.last}"
+    arr.join(del1)
   end
 
   def pause
-    sleep(1.6)
+    sleep(1.5)
   end
 end
 
@@ -33,6 +38,7 @@ module Displayable
 
   def display_welcome_message
     clear
+    big_filler
     prompt("Welcome to Tic Tac Toe!")
     empty_line
     pause
@@ -44,8 +50,10 @@ module Displayable
   end
 
   def display_board
+    big_filler
     prompt("#{human.name} is '#{human.marker}'. #{computer.name} "\
            "is '#{computer.marker}'.")
+    big_filler
     score.display
     empty_line
     board.draw_board
@@ -58,9 +66,9 @@ module Displayable
 
     case board.winning_marker
     when human.marker
-      prompt("You won!")
+      prompt("#{human.name} won!")
     when computer.marker
-      prompt("Computer won!")
+      prompt("#{computer.name} won!")
     else
       prompt("It's a tie!")
     end
@@ -87,9 +95,11 @@ module Displayable
   end
 
   def display_choose_name
+    big_filler
     prompt("Please enter a name: ")
     prompt("*Must be 2-10 characters")
     prompt("*Numbers and characters only")
+    big_filler
   end
 
   def display_invalid_name
@@ -97,8 +107,14 @@ module Displayable
             "valid name")
   end
 
-  def display_next_game
-    prompt("Next Game in our race to #{TTTGame::GRAND_WINNER_TOTAL}")
+  def display_choose_square(board)
+    prompt("Choose a square (#{joinor(board.unmarked_keys, ', ')}): ")
+  end
+
+  def diplay_choose_marker_prompt
+    big_filler
+    prompt("Please choose a marker: 'X' or 'O'")
+    big_filler
   end
 end
 
@@ -143,6 +159,7 @@ end
 
 class Board
   include Helper, Drawable
+  attr_reader :squares
 
   WINNING_LINES = [[1, 2, 3], [4, 5, 6], [7, 8, 9]] +
                   [[1, 4, 7], [2, 5, 8], [3, 6, 9]] +
@@ -208,8 +225,7 @@ class Square
 end
 
 class Player
-  attr_accessor :name, :score
-  attr_reader :marker
+  attr_accessor :name, :score, :marker
 
   def initialize(marker, name = ' ')
     @marker = marker
@@ -229,7 +245,9 @@ class Score
 
   def display
     empty_line
-    puts "Score Board"
+    puts "We are playing first to #{TTTGame::GRAND_WINNER_TOTAL} wins."
+    empty_line
+    puts "Score Board:"
     filler
     puts "#{player1.name}: #{player1.score}"
     puts "#{player2.name}: #{player2.score}"
@@ -243,46 +261,33 @@ end
 
 class TTTGame
   include Helper, Displayable
-  HUMAN_MARKER = "X"
-  COMPUTER_MARKER = "O"
-  FIRST_TO_MOVE = HUMAN_MARKER
-  GRAND_WINNER_TOTAL = 3
+  FIRST_TO_MOVE = 'X'
+  GRAND_WINNER_TOTAL = 5
 
   attr_reader :board, :human, :computer, :count, :score
 
   def initialize
     @current_marker = FIRST_TO_MOVE
     @board = Board.new
-    @human = Player.new(HUMAN_MARKER)
-    @computer = Player.new(COMPUTER_MARKER)
+    @human = Player.new('X')
+    @computer = Player.new('O')
     @score = Score.new(@human, @computer)
   end
 
   def play
-    display_welcome_message
-    choose_names
+    choose_name_marker_and_display_welcome_message
 
     loop do
-      loop do
-        display_board
+      display_board
+      choose_move_gameplay
+      update_score_and_display_result
 
-        loop do
-          current_player_moves
-          break if game_ending_condition?
-          clear_screen_and_display_board if human_turn?
-        end
-
-        update_score
-        display_result
-        pause
-
-        break if grand_winner?
+      if grand_winner?
+        display_grand_winner(name_of_grand_winner)
+        play_again? ? reset_game_and_score : break
+      else
         reset_game
       end
-
-      display_grand_winner(name_of_grand_winner)
-      break unless play_again?
-      reset_game_and_score
     end
 
     display_goodbye_message
@@ -290,13 +295,14 @@ class TTTGame
 
   private
 
-  def update_score
-    score.update(human) if board.winning_marker == HUMAN_MARKER
-    score.update(computer) if board.winning_marker == COMPUTER_MARKER
+  def choose_name_marker_and_display_welcome_message
+    display_welcome_message
+    choose_names
+    choose_marker
   end
 
   def choose_names
-    computer.name = ['Pogo', 'Diego', 'Justin', 'Brian'].sample
+    computer.name = ['Pogo', 'Diego', 'Justin', 'Brian', 'Ben'].sample
     n = ''
     loop do
       display_choose_name
@@ -308,29 +314,36 @@ class TTTGame
     human.name = n
   end
 
-  def name_of_grand_winner
-    return human.name if human.score == GRAND_WINNER_TOTAL
-    return computer.name if computer.score == GRAND_WINNER_TOTAL
+  def choose_marker
+    input = ''
+    loop do
+      diplay_choose_marker_prompt
+      input = gets.chomp.upcase
+      break if input == 'X' || input == 'O'
+      display_invalid_choice
+    end
+
+    human.marker = input
+    computer.marker = 'X' if human.marker == 'O'
+    clear
   end
 
-  def grand_winner?
-    human.score == GRAND_WINNER_TOTAL || computer.score == GRAND_WINNER_TOTAL
+  def choose_move_gameplay
+    loop do
+      current_player_moves
+      break if game_ending_condition?
+      clear_screen_and_display_board if human_turn?
+    end
   end
 
-  def swap_turn
-    @current_marker = if human_turn?
-                        COMPUTER_MARKER
-                      else
-                        HUMAN_MARKER
-                      end
-  end
-
-  def reset_current_marker
-    @current_marker = FIRST_TO_MOVE
+  def current_player_moves
+    human_moves if human_turn?
+    computer_moves if computer_turn?
+    swap_turn
   end
 
   def human_moves
-    prompt("Choose a square (#{joinor(board.unmarked_keys, ', ')}): ")
+    display_choose_square(board)
     square = nil
 
     loop do
@@ -343,7 +356,92 @@ class TTTGame
   end
 
   def computer_moves
+    if high_risk?(computer.marker)
+      attack_high_risk
+    elsif high_risk?(human.marker)
+      defend_high_risk
+    elsif board.squares[5].marker == ' '
+      take_middle_square
+    else
+      take_random_square
+    end
+  end
+
+  def human_turn?
+    @current_marker == human.marker
+  end
+
+  def computer_turn?
+    @current_marker == computer.marker
+  end
+
+  def swap_turn
+    @current_marker = if human_turn?
+                        computer.marker
+                      else
+                        human.marker
+                      end
+  end
+
+  def high_risk_square(risk_marker)
+    board.unmarked_keys.each do |key|
+      temp = Board::WINNING_LINES.select { |v| v.include?(key) }
+      temp.each do |array|
+        arr = array.map { |value| board.squares[value].marker }
+        return key if arr.count(risk_marker) == 2
+      end
+    end
+  end
+
+  def high_risk?(risk_marker)
+    board.unmarked_keys.each do |key|
+      temp = Board::WINNING_LINES.select { |v| v.include?(key) }
+      temp.each do |array|
+        arr = array.map { |value| board.squares[value].marker }
+        return true if arr.count(risk_marker) == 2
+      end
+    end
+    false
+  end
+
+  def attack_high_risk
+    board[high_risk_square(computer.marker)] = computer.marker
+  end
+
+  def defend_high_risk
+    board[high_risk_square(human.marker)] = computer.marker
+  end
+
+  def take_middle_square
+    board[5] = computer.marker
+  end
+
+  def take_random_square
     board[board.unmarked_keys.sample] = computer.marker
+  end
+
+  def game_ending_condition?
+    board.someone_won? || board.full?
+  end
+
+  def update_score_and_display_result
+    update_score
+    display_result
+    pause
+  end
+
+  def update_score
+    score.update(human) if board.winning_marker == human.marker
+    score.update(computer) if board.winning_marker == computer.marker
+  end
+
+  def name_of_grand_winner
+    human.name if human.score == GRAND_WINNER_TOTAL
+    computer.name if computer.score == GRAND_WINNER_TOTAL
+  end
+
+  def grand_winner?
+    human.score == GRAND_WINNER_TOTAL || computer.score == GRAND_WINNER_TOTAL
   end
 
   def play_again?
@@ -351,11 +449,11 @@ class TTTGame
     loop do
       display_play_again_prompt
       answer = gets.chomp.downcase
-      break if %w(y n).include? answer
+      break if %w(y n yes no).include? answer
       display_invalid_play_again_choice
     end
 
-    answer == 'y'
+    answer == 'y' || answer == 'yes'
   end
 
   def clear_screen_and_display_board
@@ -367,32 +465,18 @@ class TTTGame
     reset_game
     human.score = 0
     computer.score = 0
+    choose_marker
   end
 
   def reset_game
     board.reset
     clear
-    display_next_game
     empty_line
     reset_current_marker
   end
 
-  def game_ending_condition?
-    board.someone_won? || board.full?
-  end
-
-  def human_turn?
-    @current_marker == HUMAN_MARKER
-  end
-
-  def computer_turn?
-    @current_marker == COMPUTER_MARKER
-  end
-
-  def current_player_moves
-    human_moves if human_turn?
-    computer_moves if computer_turn?
-    swap_turn
+  def reset_current_marker
+    @current_marker = FIRST_TO_MOVE
   end
 end
 
