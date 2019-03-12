@@ -1,5 +1,3 @@
-require 'pry'
-
 module Helper
   def prompt(msg)
     puts "=> #{msg}"
