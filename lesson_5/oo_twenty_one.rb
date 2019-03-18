@@ -89,9 +89,6 @@ class Human < Player
   end
 end
 
-class Dealer < Player
-end
-
 class Deck
   RANK = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A']
   SUIT = ['♣', '♥', '♠', '♦']
@@ -181,7 +178,7 @@ class Game
   def initialize
     @deck = Deck.new
     @human = Human.new(STARTING_CHIPS)
-    @dealer = Dealer.new("Dealer")
+    @dealer = Player.new("Dealer")
     @table = Table.new(20, 1000)
   end
 
