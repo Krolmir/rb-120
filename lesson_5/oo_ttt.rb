@@ -47,31 +47,6 @@ module Displayable
     prompt("Thanks for playing Tic Tac Toe! Goodbye!")
   end
 
-  def display_board
-    big_filler
-    prompt("#{human.name} is '#{human.marker}'. #{computer.name} "\
-           "is '#{computer.marker}'.")
-    big_filler
-    score.display
-    empty_line
-    board.draw_board
-    empty_line
-  end
-
-  def display_result
-    clear
-    display_board
-
-    case board.winning_marker
-    when human.marker
-      prompt("#{human.name} won!")
-    when computer.marker
-      prompt("#{computer.name} won!")
-    else
-      prompt("It's a tie!")
-    end
-  end
-
   def display_invalid_choice
     prompt("Sorry, that's not a valid choice.")
   end
@@ -88,31 +63,9 @@ module Displayable
     prompt("Let's play again!")
   end
 
-  def display_grand_winner(name)
-    prompt("#{name} is the Grand Winner!!!")
-  end
-
-  def display_choose_name
-    big_filler
-    prompt("Please enter a name: ")
-    prompt("*Must be 2-10 characters")
-    prompt("*Numbers and characters only")
-    big_filler
-  end
-
   def display_invalid_name
     prompt("Invalid name entry. Please follow the rules for inputing a "\
             "valid name")
-  end
-
-  def display_choose_square(board)
-    prompt("Choose a square (#{joinor(board.unmarked_keys, ', ')}): ")
-  end
-
-  def diplay_choose_marker_prompt
-    big_filler
-    prompt("Please choose a marker: 'X' or 'O'")
-    big_filler
   end
 end
 
@@ -203,6 +156,17 @@ class Board
   def reset
     (1..9).each { |key| @squares[key] = Square.new }
   end
+
+  def display(human, computer, score)
+    big_filler
+    prompt("#{human.name} is '#{human.marker}'. #{computer.name} "\
+           "is '#{computer.marker}'.")
+    big_filler
+    score.display
+    empty_line
+    draw_board
+    empty_line
+  end
 end
 
 class Square
@@ -258,7 +222,7 @@ class Score
 end
 
 class TTTGame
-  include Helper, Displayable
+  include Displayable
   FIRST_TO_MOVE = 'X'
   GRAND_WINNER_TOTAL = 5
 
@@ -276,7 +240,7 @@ class TTTGame
     choose_name_marker_and_display_welcome_message
 
     loop do
-      display_board
+      board.display(human, computer, score)
       choose_move_gameplay
       update_score_and_display_result
 
@@ -456,7 +420,7 @@ class TTTGame
 
   def clear_screen_and_display_board
     clear
-    display_board
+    board.display(human, computer, score)
   end
 
   def reset_game_and_score
@@ -475,6 +439,42 @@ class TTTGame
 
   def reset_current_marker
     @current_marker = FIRST_TO_MOVE
+  end
+
+  def display_result
+    clear
+    board.display(human, computer, score)
+
+    case board.winning_marker
+    when human.marker
+      prompt("#{human.name} won!")
+    when computer.marker
+      prompt("#{computer.name} won!")
+    else
+      prompt("It's a tie!")
+    end
+  end
+
+  def display_choose_square(board)
+    prompt("Choose a square (#{joinor(board.unmarked_keys, ', ')}): ")
+  end
+
+  def diplay_choose_marker_prompt
+    big_filler
+    prompt("Please choose a marker: 'X' or 'O'")
+    big_filler
+  end
+  
+  def display_grand_winner(name)
+    prompt("#{name} is the Grand Winner!!!")
+  end
+
+  def display_choose_name
+    big_filler
+    prompt("Please enter a name: ")
+    prompt("*Must be 2-10 characters")
+    prompt("*Numbers and characters only")
+    big_filler
   end
 end
 

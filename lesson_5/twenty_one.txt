@@ -1,0 +1,15 @@
+Problem: Create an OO twenty one game
+
+Problem: create a method  that allows us to determine if aces need to be 1 or 11
+
+Rules: if ace_count > 0 && toital > 21
+      call fix total()
+     
+steps: define fix_total
+=> total = total - 10
+=> ace_decrament
+
+Betting:
+
+# players start off with 2500$
+# table max is 500$
